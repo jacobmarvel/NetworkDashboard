@@ -54,3 +54,8 @@ def test_ping_timeout(client):
     body = resp.json()
     assert body["ok"] is False
     assert body["rtt_ms"] == -1
+
+def test_ping_wrong_method(client):
+    url = reverse("devices-ping", args=[1])
+    resp = client.get(url)
+    assert resp.status_code == 405
