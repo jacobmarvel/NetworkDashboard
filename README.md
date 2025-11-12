@@ -5,7 +5,7 @@ A single-page Django application that shows a list of network devices, their sta
 The frontend uses Bootstrap 5 with a small amount of JavaScript.  
 Everything runs locally, no external API calls are needed.
 
-![Dashboard screenshot](networkdash/docs/dashboard.jpeg)
+![Dashboard screenshot](docs/dashboard.jpeg)
 
 ---
 
@@ -31,6 +31,9 @@ The project uses a Python virtual environment (example on Ubuntu):
 
 ```bash
 # clone the repo and cd into it
+git clone https://github.com/jacobmarvel/NetworkDashboard.git
+cd NetworkDashboard
+#Create Virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
 
