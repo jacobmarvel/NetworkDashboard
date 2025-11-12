@@ -28,11 +28,9 @@ Everything runs locally, no external API calls are needed.
 
 - GET /devices?mode=min → exact sample API from the task given
   (id, name, ip_address, status)
-
 - GET /devices → rich data used by the UI
   (adds type, location, latency, last_checked, status_changed_at)
-
-- POST /devices/<id>/ping → mock ping result (RTT ms or timeout)
+- POST /devices/id/ping → mock ping result (RTT ms or timeout)
 
 ---
 
@@ -79,13 +77,13 @@ docker container ls   # confirm the container is running
 docker images         # see built images
 ```
 
-If you want to push the image (optional):
+If we want to push the image (optional):
 ```
 docker push <username>/networkdash:dev
 ```
 ## 4. Kubernetes (minikube)
 
-You can run the app on a local Kubernetes cluster using minikube.
+We can run the app on a local Kubernetes cluster using minikube.
 
 Install minikube (example):
 ```
@@ -115,7 +113,7 @@ kubectl get pods
 ```
 
 
-If you exposed the service as NodePort, you can open it with:
+If we exposed the service as NodePort, we can open it with:
 ```
 minikube service networkdash
 ```
