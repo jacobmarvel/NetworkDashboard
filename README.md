@@ -18,10 +18,21 @@ Everything runs locally, no external API calls are needed.
   - KPIs (total / up / down)
   - Device cards + details modal
   - Dark mode toggle
+  - Auto-Refresh
 - Mock ping endpoint: `POST /devices/<id>/ping` (simulated RTT or timeout)
 - Unit tests with `pytest` (positive and negative cases)
 - Dockerfile to containerize the app
 - Simple Kubernetes manifests (minikube friendly)
+
+# Endpoints
+
+- GET /devices?mode=min → exact sample API from the task given
+  (id, name, ip_address, status)
+
+- GET /devices → rich data used by the UI
+  (adds type, location, latency, last_checked, status_changed_at)
+
+- POST /devices/<id>/ping → mock ping result (RTT ms or timeout)
 
 ---
 
