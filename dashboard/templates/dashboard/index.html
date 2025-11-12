@@ -1,0 +1,160 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Network Status Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+      /* Curved corners + clip content so the curve is visible */
+      .card { border-radius: 1rem !important; overflow: hidden; }
+      .toast, .modal-content { border-radius: 0.75rem !important; }
+
+      /* Left status strip colors */
+      .card-border-up{ border-left:4px solid #22c55e; }
+      .card-border-down{ border-left:4px solid #ef4444; }
+
+      /* Status dots */
+      .dot{ width:10px; height:10px; border-radius:50%; }
+      .dot-up{ background:#22c55e; }
+      .dot-down{ background:#ef4444; }
+
+      /* KPI cards already rounded via .card, but keep a hook */
+      .kpi{ border-radius:1rem; }
+
+      /* Device type icons next to names */
+      .devtype-icon{ width:18px; height:18px; vertical-align:-2px; opacity:.9; }
+    </style>
+  </head>
+  <body class="bg-body-tertiary">
+    <div class="container py-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 m-0">Network Status Dashboard</h1>
+        <div class="d-flex gap-2">
+          <div class="form-check form-switch pt-1">
+            <input class="form-check-input" type="checkbox" id="toggle-dark">
+            <label class="form-check-label" for="toggle-dark">Dark</label>
+          </div>
+          <button id="btn-refresh" class="btn btn-primary btn-sm">Refresh</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="row g-3 mb-3">
+        <div class="col-12 col-md-4">
+          <div class="kpi card shadow-sm">
+            <div class="card-body">
+              <div class="text-secondary text-uppercase small">Total Devices</div>
+              <div id="kpi-total" class="display-6 fw-semibold">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="kpi card shadow-sm">
+            <div class="card-body">
+              <div class="text-secondary text-uppercase small">Devices Up</div>
+              <div id="kpi-up" class="display-6 fw-semibold text-success">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="kpi card shadow-sm">
+            <div class="card-body">
+              <div class="text-secondary text-uppercase small">Devices Down</div>
+              <div id="kpi-down" class="display-6 fw-semibold text-danger">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div class="row g-2 align-items-center">
+            <div class="col-md">
+              <input id="search" type="search" class="form-control" placeholder="Search by name or IP address…" />
+            </div>
+            <div class="col-auto">
+              <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary btn-filter" data-filter="All">All</button>
+                <button class="btn btn-outline-primary btn-filter" data-filter="Up">Up</button>
+                <button class="btn btn-outline-primary btn-filter" data-filter="Down">Down</button>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="toggle-auto">
+                <label class="form-check-label" for="toggle-auto">Auto-Refresh</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <span id="last-updated" class="text-secondary small"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="error-box" class="alert alert-danger d-none" role="alert">
+        <div class="d-flex justify-content-between align-items-center">
+          <div><strong>An error occurred.</strong> <span id="error-text">Failed to fetch device data.</span></div>
+          <button id="btn-retry" class="btn btn-danger btn-sm">Retry</button>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="grid" class="row g-3"></div>
+
+      <!-- Loading -->
+      <div id="loading" class="py-5 text-center d-none">
+        <div class="spinner-border" role="status" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+      <div id="toast" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body" id="toast-msg">Device went down</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deviceModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="modal-title" class="modal-title">Device</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div id="modal-body" class="modal-body small"></div>
+          <div class="modal-footer">
+            <button id="modal-ping" type="button" class="btn btn-primary">Ping</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Icon URLs resolved by Django's static system -->
+    <script>
+      window.ICON_MAP = {
+        Router: "{% static 'dashboard/icons/router.svg' %}",
+        Switch: "{% static 'dashboard/icons/switch.svg' %}",
+        Firewall: "{% static 'dashboard/icons/firewall.svg' %}"
+      };
+    </script>
+
+    <!-- App script -->
+    <script src="{% static 'dashboard/app.js' %}"></script>
+  </body>
+</html>

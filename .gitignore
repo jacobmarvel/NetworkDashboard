@@ -1,0 +1,14 @@
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual env
+.venv/
+
+# Django
+db.sqlite3
+
+# Tools / binaries
+minikube-linux-amd64
+EOF
